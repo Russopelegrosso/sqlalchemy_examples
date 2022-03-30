@@ -70,7 +70,35 @@ def get_overlay():
 # LIMIT 10
 def get_substring():
     with SessionLocal() as session:
-        query_answer = session.query(Customers.c.customer_id, func.substring(Customers.c.customer_id,  2, 3)
+        query_answer = session.query(Customers.c.customer_id, func.substring(Customers.c.customer_id, 2, 3)
+                                     ).limit(10)
+
+        for item in query_answer:
+            print(item)
+        print('-----------------------SQL-Query--------------------------------')
+        return query_answer
+
+
+# SELECT  customer_id, left(customer_id, 1)
+# FROM customers
+# LIMIT 10
+def get_left_side_of_string():
+    with SessionLocal() as session:
+        query_answer = session.query(Customers.c.customer_id, func.left(Customers.c.customer_id, 1)
+                                     ).limit(10)
+
+        for item in query_answer:
+            print(item)
+        print('-----------------------SQL-Query--------------------------------')
+        return query_answer
+
+
+# SELECT  customer_id, right(customer_id, 2)
+# FROM customers
+# LIMIT 10
+def get_right_side_of_string():
+    with SessionLocal() as session:
+        query_answer = session.query(Customers.c.customer_id, func.right(Customers.c.customer_id, 2)
                                      ).limit(10)
 
         for item in query_answer:
@@ -80,4 +108,4 @@ def get_substring():
 
 
 if __name__ == '__main__':
-    print(get_substring())
+    print(get_right_side_of_string())

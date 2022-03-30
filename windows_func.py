@@ -1,4 +1,4 @@
-from sqlalchemy import func
+from sqlalchemy import func, case, and_
 from core.db import SessionLocal
 from core.models import Products, Categories, Orders, Order_details
 
@@ -92,5 +92,143 @@ def get_windows_func_3():
         return query_answer
 
 
+# SELECT product_name, units_in_stock,
+# 	RANK() OVER(ORDER BY product_id)
+# FROM products;
+#
+# Gives successive runk for each product_id
+def get_windows_func_runk():
+    with SessionLocal() as session:
+        query_answer = session.query(Products.c.product_name, Products.c.units_in_stock, Products.c.product_name,
+                                     func.rank().over(order_by=Products.c.product_id))
+
+        for item in query_answer:
+            print(item)
+        print('-----------------------SQL-Query--------------------------------')
+        return query_answer
+
+
+# SELECT product_name, units_in_stock,
+# 	RANK() OVER(ORDER BY units_in_stock)
+# FROM products;
+#
+# Gives a sequential rank for each unit_in_stock with gap
+#   if first 4 unit_price = 0 then for each runk unit_stock = 1 but for next unit_price which is > 0 runk = 5
+def get_windows_func_runk_2():
+    with SessionLocal() as session:
+        query_answer = session.query(Products.c.product_name, Products.c.units_in_stock, Products.c.product_name,
+                                     func.rank().over(order_by=Products.c.units_in_stock))
+
+        for item in query_answer:
+            print(item)
+        print('-----------------------SQL-Query--------------------------------')
+        return query_answer
+
+
+# SELECT product_name, units_in_stock,
+# 	DENSE_RANK() OVER(ORDER BY units_in_stock)
+# FROM products;
+#
+# Gives a sequential rank for each unit_in_stock without   gap
+#   if first 4 unit_price = 0 then for each runk unit_stock = 1  for next unit_price which is > 0 runk = 2 etc.
+def get_windows_func_dense_rank():
+    with SessionLocal() as session:
+        query_answer = session.query(Products.c.product_name, Products.c.units_in_stock, Products.c.product_name,
+                                     func.dense_rank().over(order_by=Products.c.units_in_stock))
+
+        for item in query_answer:
+            print(item)
+        print('-----------------------SQL-Query--------------------------------')
+        return query_answer
+
+
+# SELECT product_name, unit_price,
+# 	DENSE_RANK() OVER(ORDER BY
+# 						 CASE
+# 							WHEN unit_price <= 30 THEN 1
+# 							WHEN unit_price > 30 AND unit_price < 80 THEN 2
+# 							ELSE 3
+# 						 END
+# 				) as ranking
+# FROM products
+# ORDER BY unit_price DESC;
+# Gives a own rank for each unit_price
+def get_windows_func_dense_rank_2():
+    with SessionLocal() as session:
+        query_answer = session.query(Products.c.product_name, Products.c.unit_price, Products.c.product_name,
+                                     case(
+                                         (Products.c.unit_price <= 30, 1),
+                                         (and_(Products.c.unit_price > 30, Products.c.unit_price < 80), 2),
+                                         else_=3
+                                     ).label('ranking')).order_by(Products.c.unit_price.desc())
+
+        for item in query_answer:
+            print(item)
+        print('-----------------------SQL-Query--------------------------------')
+        return query_answer
+
+
+# SELECT product_name, unit_price,
+# 	LAG(unit_price) OVER(ORDER BY unit_price DESC) - unit_price AS price_lag
+# FROM products
+# ORDER BY unit_price DESC;
+# Gives the difference between the current item and the previous item
+
+def get_windows_func_lag():
+    with SessionLocal() as session:
+        query_answer = session.query(Products.c.product_name, Products.c.unit_price,
+                                     (func.lag(Products.c.unit_price).over(
+                                         order_by=Products.c.unit_price.desc()) - Products.c.unit_price).label(
+                                         'price_lag')).order_by(
+            Products.c.unit_price.desc())
+
+        for item in query_answer:
+            print(item)
+        print('-----------------------SQL-Query--------------------------------')
+        return query_answer
+
+
+# SELECT product_name, unit_price,
+# 	LEAD(unit_price) OVER(ORDER BY unit_price) - unit_price AS price_lead
+# FROM products
+# ORDER BY unit_price;
+# Gives the difference between the current item and the next item
+def get_windows_func_lead():
+    with SessionLocal() as session:
+        query_answer = session.query(Products.c.product_name, Products.c.unit_price,
+                                     (func.lead(Products.c.unit_price).over(
+                                         order_by=Products.c.unit_price) - Products.c.unit_price).label(
+                                         'price_lead')).order_by(
+            Products.c.unit_price)
+
+        for item in query_answer:
+            print(item)
+        print('-----------------------SQL-Query--------------------------------')
+        return query_answer
+
+
+# SELECT *
+# FROM (
+# 	SELECT product_id, product_name, category_id, unit_price, units_in_stock,
+# 		ROW_NUMBER() OVER(ORDER BY unit_price DESC) as nth
+# 	FROM products
+# ) as sorted_prices
+# WHERE nth < 4
+# ORDER BY unit_price
+# Return N rows
+def get_n_rows():
+    with SessionLocal() as session:
+        subquery = session.query(Products.c.product_id, Products.c.product_name, Products.c.category_id,
+                                 Products.c.unit_price,  Products.c.units_in_stock,
+                                 func.row_number().over(order_by=Products.c.unit_price.desc()).label('nth')).subquery()
+
+        query_answer = session.query(subquery).where(subquery.c.nth < 4).order_by(subquery.c.unit_price)
+
+        for item in query_answer:
+            print(item)
+        print('-----------------------SQL-Query--------------------------------')
+        return query_answer
+
+
 if __name__ == '__main__':
-    print(get_windows_func_3())
+    print(get_n_rows())

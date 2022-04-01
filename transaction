@@ -1,0 +1,48 @@
+from sqlalchemy import func, case, and_, update
+from core.db import SessionLocal
+from core.models import Products, Categories, Orders, Order_details
+
+
+# BEGIN;
+#
+# WITH prod_update as (
+# 	UPDATE products
+# 	SET discontinued = 1
+# 	WHERE units_in_stock < 10
+# 	RETURNING product_id
+# )
+#
+# SELECT * INTO last_orders_on_disontinued
+# FROM order_details
+# WHERE product_id IN (SELECT product_id FROM prod_update);
+#
+# DELETE FROM order_details
+# WHERE product_id IN (SELECT product_id FROM last_orders_on_disontinued);
+#
+# COMMIT;
+
+# SELECT count(*) FROM last_orders_on_disontinued;
+# drop table if exists last_orders_on_disontinued;
+def get_windows_func_1():
+    with SessionLocal() as session:
+        session.begin()
+        prod_update = update(Products).where(Products.c.units_in_stock < 10).values(discontinued=1).returning(Products.c.product_id).cte(name='prod_update')
+        query_answer = session.query().select_from(Order_details).where(Order_details.c.in_(prod_update.c.product_id))
+
+        for item in query_answer:
+            print(item)
+        print('-----------------------SQL-Query--------------------------------')
+        session.rollback()
+        return query_answer
+
+if __name__ == '__main__':
+    print(get_windows_func_1())
+
+    # try:
+    #     session.add(some_object)
+    #     session.add(some_other_object)
+    # except:
+    #     session.rollback()
+    #     raise
+    # else:
+    #     session.commit()

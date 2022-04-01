@@ -1,0 +1,73 @@
+from datetime import datetime
+from sqlalchemy import func
+from core.db import SessionLocal
+from core.models import Orders
+
+
+# select age(order_date, shipped_date)
+# From orders;
+# Get difference between order_date and shipped_date
+def get_age_1():
+    with SessionLocal() as session:
+        query_answer = session.query(func.age(Orders.c.order_date, Orders.c.shipped_date))
+
+        for item in query_answer:
+            print(item)
+        print('-----------------------SQL-Query--------------------------------')
+        return query_answer
+
+
+# select age(order_date, shipped_date)
+# From orders;
+# Get difference between order_date and current_date
+def get_age_2():
+    with SessionLocal() as session:
+        query_answer = session.query(func.age(Orders.c.order_date))
+
+        for item in query_answer:
+            print(item)
+        print('-----------------------SQL-Query--------------------------------')
+        return query_answer
+
+
+# select date_part('hour', timestamp '2001-02-16 22:38:40')
+# From orders;
+# Get part "hour" from date
+def get_date_part_1():
+    with SessionLocal() as session:
+        to_date = datetime.strptime('2001-02-16 22:38:40', "%Y-%m-%d %H:%M:%S")
+        query_answer = session.query(func.date_part('hour', to_date))
+        for item in query_answer:
+            print(item)
+        print('-----------------------SQL-Query--------------------------------')
+        return query_answer
+
+
+# select date_part('month', timestamp '2001-02-16 22:38:40')
+# From orders;
+# Get part "month" from date
+def get_date_part_2():
+    with SessionLocal() as session:
+        to_date = datetime.strptime('2001-02-16 22:38:40', "%Y-%m-%d %H:%M:%S")
+        query_answer = session.query(func.date_part('month', to_date))
+        for item in query_answer:
+            print(item)
+        print('-----------------------SQL-Query--------------------------------')
+        return query_answer
+
+
+# select date_trunc('year', timestamp '2001-02-16 22:38:40')
+# From orders;
+# Trims components to the given value
+def get_date_trunc():
+    with SessionLocal() as session:
+        to_date = datetime.strptime('2001-02-16 22:38:40', "%Y-%m-%d %H:%M:%S")
+        query_answer = session.query(func.date_trunc('year', to_date))
+        for item in query_answer:
+            print(item)
+        print('-----------------------SQL-Query--------------------------------')
+        return query_answer
+
+
+if __name__ == '__main__':
+    print(get_date_trunc())

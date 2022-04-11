@@ -1,9 +1,5 @@
-from sqlalchemy import func, case, and_, select
 from core.db import SessionLocal
-from core.models import Products, Categories, Orders, Order_details
 from sqlalchemy.sql import text
-from sqlalchemy_views import CreateView, DropView
-from sqlalchemy import Table, MetaData
 
 
 # CREATE VIEW prod_sup_cat as
@@ -12,16 +8,30 @@ from sqlalchemy import Table, MetaData
 # FROM products
 # JOIN suppliers USING(supplier_id)
 # join categories USING(category_id);
-def get_windows_func_1():
+def get_view():
     with SessionLocal() as session:
-        view = Table(Products.name, MetaData())
-        create_view = CreateView(view, select(Products), or_replace=True)
-        query_answer = session.execute(str(create_view.compile()))
+        sql = text('''CREATE VIEW prod_sup_cate as
+                 SELECT product_name, quantity_per_unit, unit_price, units_in_stock,
+                         company_name, contact_name, phone, category_name, description
+                 FROM products
+                 JOIN suppliers USING(supplier_id)
+                 join categories USING(category_id);''')
+        session.execute(sql)
+        session.commit()
+
+        print('-----------------------SQL-Query--------------------------------')
+
+
+def get_created_view():
+    with SessionLocal() as session:
+        sql = text('''SELECT * FROM prod_sup_cate LIMIT 10''')
+        query_answer = session.execute(sql)
 
         for item in query_answer:
             print(item)
         print('-----------------------SQL-Query--------------------------------')
         return query_answer
 
+
 if __name__ == '__main__':
-    print(get_windows_func_1())
+    print(get_created_view())
